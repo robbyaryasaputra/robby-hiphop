@@ -164,6 +164,18 @@
                     <div class="card-body">
                         <h5 class="card-title">Form Pertanyaan</h5>
 
+                            @if ($errors->any())
+                                <div class="alert alert-danger">
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                                
+                            @endif
+
+
                         <form action="{{ route('question.store') }}" method="POST">
                             @csrf
                             <div class="mb-3">
@@ -245,7 +257,8 @@
                             </table>
                         </div>
                         <p class="text-muted small mb-0">Tambahkan <code>.table-striped</code> atau
-                            <code>.table-bordered</code> sesuai kebutuhan.</p>
+                            <code>.table-bordered</code> sesuai kebutuhan.
+                        </p>
                     </div>
                 </div>
             </div>
