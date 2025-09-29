@@ -9,11 +9,11 @@ class PegawaiController extends Controller
     public function index()
     {
         // Example data (customize as needed)
-        $name = 'Robby HipHop';
-        $birthdate = '2003-05-10';
-        $hobbies = ['Ngoding', 'Futsal', 'Mendengarkan Musik', 'Makan', 'Traveling'];
-        $tgl_harus_wisuda = '2026-08-15';
-        $current_semester = 4;
+        $name = 'Robby';
+        $birthdate = '2004-10-11';
+        $hobbies = ['Ngoding', 'Futsal', 'Mendengarkan Musik', 'Game', 'Traveling'];
+        $tgl_harus_wisuda = '2028-10-15';
+        $current_semester = 3;
         $future_goal = 'Menjadi Software Engineer di perusahaan besar';
 
         // Calculate age
