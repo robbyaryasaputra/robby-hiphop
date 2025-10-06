@@ -34,6 +34,7 @@ class QuestionController extends Controller
             [
                 'nama.required'=>'Nama tidak boleh kosong',
                 'email.required'=>'Email tidak valid',
+                
 		    ]);
         //dd($request->all());
 

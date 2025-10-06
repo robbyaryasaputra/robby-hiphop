@@ -1,0 +1,8 @@
+@font-face {
+    font-family: 'OpenSens';
+    src: url('assets/fonts/OpenSens.ttf');
+}
+
+.font-custom{
+    font-family: 'OpenSens';
+}
