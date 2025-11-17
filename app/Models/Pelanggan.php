@@ -21,11 +21,16 @@ class Pelanggan extends Model
     /**
      * Scope: Filter berdasarkan kolom yang dapat difilter
      */
-    public function scopeFilter(Builder $query, $request, array $filterableColumns): Builder
+    public function scopeFilter(Builder $query, $request, array $filterableColumns = []): Builder
     {
+        if (!$request) {
+            return $query;
+        }
+
         foreach ($filterableColumns as $column) {
-            if ($request->filled($column)) {
-                $query->where($column, $request->input($column));
+            if ($request->has($column) && $request->filled($column)) {
+                $value = $request->input($column);
+                $query->where($column, $value);
             }
         }
         return $query;
@@ -34,16 +39,22 @@ class Pelanggan extends Model
     /**
      * Scope: Search berdasarkan kolom yang dapat dicari
      */
-    public function scopeSearch(Builder $query, $request, array $searchableColumns): Builder
+    public function scopeSearch(Builder $query, $request, array $searchableColumns = []): Builder
     {
-        if ($request->filled('search')) {
-            $searchTerm = $request->input('search');
-            $query->where(function (Builder $q) use ($searchTerm, $searchableColumns) {
-                foreach ($searchableColumns as $column) {
+        if (!$request || !$request->filled('search')) {
+            return $query;
+        }
+
+        $searchTerm = $request->input('search');
+        
+        return $query->where(function (Builder $q) use ($searchTerm, $searchableColumns) {
+            foreach ($searchableColumns as $index => $column) {
+                if ($index === 0) {
+                    $q->where($column, 'like', '%' . $searchTerm . '%');
+                } else {
                     $q->orWhere($column, 'like', '%' . $searchTerm . '%');
                 }
-            });
-        }
-        return $query;
+            }
+        });
     }
 }
