@@ -479,7 +479,7 @@
                             </div>
                         @endif
 
-                        <form action="{{ route('pelanggan.store') }}" method="POST">
+                        <form action="{{ route('pelanggan.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
                                 <div class="col-md-6">
@@ -525,6 +525,14 @@
                                             <input class="form-control" id="birthday" name="birthday"
                                                 type="date" placeholder="yyyy-mm-dd">
                                         </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="files" class="form-label">Upload Dokumen (Bisa pilih
+                                            banyak)</label>
+                                       <input class="form-control @error('file') is-invalid @enderror" type="file" id="file" name="file[]" multiple>
+                                            multiple>
+                                        <small class="text-muted">Format: jpg, png, pdf. Max: 2MB per file.</small>
                                     </div>
 
                                     <div class="mb-3">

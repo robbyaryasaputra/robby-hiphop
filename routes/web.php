@@ -52,8 +52,6 @@ Route::resource('pelanggan', PelangganController::class);
 
 Route::resource('user', UserController::class);
 
-// Profile routes (authenticated user)
-Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
-Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+Route::get('/multipleuploads', 'MultipleuploadsController@index')->name('uploads');
+Route::post('/save', 'MultipleuploadsController@store')->name('uploads.store');
+

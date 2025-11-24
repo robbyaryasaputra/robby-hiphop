@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pelanggan;
 use Illuminate\Http\Request;
+use App\Models\PelangganFile;
 
 class PelangganController extends Controller
 {
@@ -14,12 +15,13 @@ class PelangganController extends Controller
     {
         $filterableColumns = ['gender'];
         $searchableColumns = ['first_name', 'last_name', 'email', 'phone'];
-        
-        $data['dataPelanggan'] = Pelanggan::filter($request, $filterableColumns)
+
+        $data['dataPelanggan'] = Pelanggan::with('files') // Eager load files
+            ->filter($request, $filterableColumns)
             ->search($request, $searchableColumns)
             ->paginate(10)
             ->withQueryString();
-        
+
         return view('admin.pelanggan.index', $data);
     }
 
@@ -34,22 +36,55 @@ class PelangganController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        ($request->all());
+{
+    // 1. Validasi
+    $request->validate([
+        'first_name' => 'required',
+        'last_name' => 'required',
+        'birthday' => 'required',
+        'gender' => 'required',
+        'email' => 'required|email',
+        'phone' => 'required',
+        'address' => 'required',
+        'company' => 'required',
+        // Validasi array file (perhatikan tanda .*)
+        'file.*' => 'mimes:png,jpg,jpeg,pdf,doc,docx|max:2048', 
+    ]);
 
-        $data['first_name'] = $request->first_name;
-        $data['last_name']  = $request->last_name;
-        $data['birthday']   = $request->birthday;
-        $data['gender']     = $request->gender;
-        $data['email']      = $request->email;
-        $data['phone']      = $request->phone;
+    // 2. Simpan Data Pelanggan
+    $data['first_name'] = $request->first_name;
+    $data['last_name'] = $request->last_name;
+    $data['birthday'] = $request->birthday;
+    $data['gender'] = $request->gender;
+    $data['email'] = $request->email;
+    $data['phone'] = $request->phone;
+    $data['address'] = $request->address;
+    $data['company'] = $request->company;
 
+    // Simpan pelanggan ke database dan tampung ke variabel $pelanggan
+    $pelanggan = Pelanggan::create($data);
 
+    // 3. Proses Multiple Upload (Looping)
+    if ($request->hasFile('file')) {
+        // Kita lakukan foreach karena file yang dikirim sekarang bentuknya array
+        foreach ($request->file('file') as $uploadedFile) {
+            
+            // Generate nama unik
+            $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $uploadedFile->getClientOriginalName());
+            
+            // Pindahkan file ke folder public
+            $uploadedFile->move(public_path('uploads/pelanggan'), $filename);
 
-        Pelanggan::create($data);
-
-        return redirect()->route('pelanggan.create')->with('success', 'Penambahan Data Berhasil!');
+            // Simpan ke tabel pelanggan_files
+            PelangganFile::create([
+                'pelanggan_id' => $pelanggan->pelanggan_id, // Ambil ID pelanggan yang baru dibuat
+                'file' => $filename // Sesuai nama kolom di database Anda
+            ]);
+        }
     }
+
+    return redirect()->route('pelanggan.index')->with('success', 'Penambahan Data Berhasil');
+}
 
     /**
      * Display the specified resource.
