@@ -5,20 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar user
      */
     public function index()
     {
-        $data['dataUser'] = User::all();
-		return view('admin.user.index',$data);
+        // Mengirim variabel $dataUser ke view index
+        $dataUser = User::latest()->paginate(10);
+        return view('admin.user.index', compact('dataUser'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form tambah user
      */
     public function create()
     {
@@ -26,50 +28,102 @@ class UserController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data user baru
      */
     public function store(Request $request)
     {
-        $data['name']   = $request->name;
-        $data['email']   = $request->email;
-        $data['password'] = Hash::make($request->password);
-        $data['password_confirmation']   = $request->password_confirmation;
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ];
+
+        // LOGIC UPLOAD FOTO
+        if ($request->hasFile('profile_picture')) {
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $data['profile_picture'] = $path;
+        }
 
         User::create($data);
 
-        return redirect()->route('user.create')->with('success', 'Penambahan Data Berhasil!');
-
+        return redirect()->route('user.index')->with('success', 'User berhasil ditambahkan!');
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form edit user (BAGIAN YANG ERROR SEBELUMNYA)
      */
     public function edit(string $id)
     {
-        //
+        // 1. Cari user berdasarkan ID
+        $user = User::findOrFail($id);
+
+        // 2. Kirim data $user ke view
+        // 'compact' akan membuat variabel $user tersedia di blade
+        return view('admin.user.edit', compact('user'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Mengupdate data user
      */
     public function update(Request $request, string $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,'.$id,
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+        ];
+
+        // Cek update password
+        if ($request->filled('password')) {
+            $request->validate(['password' => 'min:8|confirmed']);
+            $data['password'] = Hash::make($request->password);
+        }
+
+        // LOGIC UPDATE FOTO
+        if ($request->hasFile('profile_picture')) {
+            // Hapus foto lama
+            if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            // Upload foto baru
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $data['profile_picture'] = $path;
+        }
+
+        $user->update($data);
+
+        return redirect()->route('user.index')->with('success', 'User berhasil diupdate!');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus data user
      */
     public function destroy(string $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        // Hapus file foto jika ada
+        if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        $user->delete();
+
+        return redirect()->route('user.index')->with('success', 'User berhasil dihapus!');
     }
 }
